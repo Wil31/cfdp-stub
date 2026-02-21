@@ -1,0 +1,36 @@
+
+replicaCount: 2
+
+image:
+  repository: cfdp-stub
+  tag: dev
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: 
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+
+env:
+  APP_NAME: "cfdp-stub"
+  LOG_LEVEL: "INFO"
+  ACK_PROBABILITY: "0.85"
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: cfdp.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

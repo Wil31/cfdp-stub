@@ -1,0 +1,11 @@
+
+services:
+  api:
+    build: .
+    image: cfdp-stub:dev
+    environment:
+      - APP_NAME=cfdp-stub
+      - ACK_PROBABILITY=0.9
+      - LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
