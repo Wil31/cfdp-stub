@@ -5,6 +5,9 @@ from app.config import settings
 from app.cfdp_stub import process_packet, ws_process, set_ack_probability, ACK_COUNT, NAK_COUNT
 from app.models import Packet
 from typing import Set
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -37,6 +40,7 @@ ACTIVE_CLIENTS: Set[WebSocket] = set()
 @app.websocket("/ws")
 async def ws(ws: WebSocket):
     await ws.accept()
+    logging.info("WS connected: %s", ws.client)
     ACTIVE_CLIENTS.add(ws)
     try:
         await ws.send_json({"status": "READY", "ack_probability": settings.ACK_PROBABILITY})
@@ -53,6 +57,7 @@ async def ws(ws: WebSocket):
                         await ws.send_json({"type":"system","status":"ERROR","reason":"Value must be between 0.0 and 1.0"})
                         continue
                     set_ack_probability(val)
+                    logging.info("ACK probability updated to %.2f by %s", val, ws.client)
                     # reponse à l'émetteur
                     await ws.send_json({"type":"system","status":"OK","ack_probability": val})
                     for client in list(ACTIVE_CLIENTS):
@@ -70,7 +75,9 @@ async def ws(ws: WebSocket):
             resp = ws.process(data)
             await ws.send_json(resp)
 
-    except Exception:
+    except Exception as e:
+        logging.warning("WS error: %s", e)
         pass
     finally:
         ACTIVE_CLIENTS.discard(ws)
+        logging.info("WS disconnected: %s", ws.client)
