@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from app.config import settings
 from app.cfdp_stub import process_packet, ws_process, set_ack_probability, ACK_COUNT, NAK_COUNT
@@ -45,7 +45,14 @@ async def ws(ws: WebSocket):
     try:
         await ws.send_json({"status": "READY", "ack_probability": settings.ACK_PROBABILITY})
         while True:
-            data = await ws.receive_json()
+            try:
+                data = await ws.receive_json()
+            except WebSocketDisconnect:
+                logging.info("WS disconnected: %s", ws.client)
+                break
+            except Exception as e:
+                logging.warning("WS error: %s", e)
+                break
 
             # 1) commandes
             if isinstance(data, dict) and data.get("type") == "command":
@@ -72,7 +79,7 @@ async def ws(ws: WebSocket):
                 continue
 
             # 2) paquet classique
-            resp = ws.process(data)
+            resp = ws_process(data)
             await ws.send_json(resp)
 
     except Exception as e:

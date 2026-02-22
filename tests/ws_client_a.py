@@ -3,7 +3,8 @@ import asyncio, websockets, json
 URI = "ws://localhost:8000/ws"
 
 async def main():
-    async with websockets.connect(URI) as ws:
+    ws = await websockets.connect(URI)
+    try:
         # message de bienvenu
         print("A:", await ws.recv())
         # envoi de setAckProb à 0.5
@@ -16,5 +17,10 @@ async def main():
         print("A:", await ws.recv())
 
         await asyncio.sleep(10)
+    finally:
+        try:
+            await asyncio.wait_for(ws.close(), timeout=2)
+        except asyncio.TimeoutError:
+            print("Timeout lors de la fermeture du WebSocket")
 
 asyncio.run(main())
