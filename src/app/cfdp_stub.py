@@ -1,4 +1,3 @@
-
 import random
 from app.config import settings
 
@@ -23,14 +22,13 @@ def ack_or_nak() -> str:
         ACK_COUNT += 1
     else:
         NAK_COUNT += 1
-    return
+    return res
 
 def process_packet(packet: dict) -> dict:
     ok, err = validate(packet)
     if not ok:
         return {"status": "NAK", "error": err}
     return {"status": ack_or_nak(), "id": packet["id"]}
-
 
 def ws_process(message: dict) -> dict:
     ok, err = validate(message)

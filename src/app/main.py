@@ -59,7 +59,15 @@ async def ws(ws: WebSocket):
                 action = data.get("action")
                 if action == "setAckProb":
                     #validation
-                    val = float(data.get("value"))
+                    value = data.get("value")
+                    if value is None:
+                        await ws.send_json({"type": "system", "status": "ERROR", "reason": "Value is required"})
+                        continue
+                    try:
+                        val = float(value)
+                    except (TypeError, ValueError):
+                        await ws.send_json({"type": "system", "status": "ERROR", "reason": "value must be a number"})
+                        continue
                     if not (0.0 <= val <= 1.0):
                         await ws.send_json({"type":"system","status":"ERROR","reason":"Value must be between 0.0 and 1.0"})
                         continue
